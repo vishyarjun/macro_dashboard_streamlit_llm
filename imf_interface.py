@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+from reference_data import macroeconomic_indicators
 class IMFInterace:
     def __init__(self): 
         self.url = 'https://www.imf.org/external/datamapper/api/v1/'
@@ -19,8 +20,12 @@ class IMFInterace:
             if not display_ui:
                 return resp.keys()
             else:
-                for key in resp:
+                for key in macroeconomic_indicators:
+                    
                     self.new_dict[resp[key]['label']] = (key,resp[key]['description'])
+                
+
+
                 return self.new_dict
     
     def get_symbol_desc(self,keys):
@@ -47,13 +52,21 @@ class IMFInterace:
     
     def refresh_data(self):
         df = pd.DataFrame()
-        for ind in self.get_all_indicators(False):
-            print(ind)
+        all_indicators = self.get_all_indicators(True)
+        
+        for i, ind in enumerate(macroeconomic_indicators):
+            print(i, ind)
             df_temp = self.get_indicator_data(ind)
             df = pd.concat([df, df_temp], axis=1)
+            if i<100:
+                yield 1
+            else:
+                yield 0
         
         df.sort_values(by='Year', inplace=True)
         df.to_csv(self.source_data)
+        return 1
+
             
     
     def get_graph_data(self,symbols):
@@ -61,7 +74,7 @@ class IMFInterace:
             return
         df = pd.read_csv(self.source_data)
         symbols = ["Year"] + symbols
-        df = df[symbols]
+        df = df[[symbol for symbol in symbols if symbol in df.columns]]
         #df.set_index('Year',inplace=True)
         df.sort_values(by='Year', inplace=True)
         df = df.dropna()
@@ -71,4 +84,4 @@ class IMFInterace:
 
 
 imf = IMFInterace()
-#imf.refresh_data()
+imf.get_all_indicators(True)
