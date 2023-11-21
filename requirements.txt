@@ -4,3 +4,4 @@ streamlit
 yfinance
 TA-Lib
 ta
+vega_datasets
